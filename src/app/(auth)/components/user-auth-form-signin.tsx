@@ -24,7 +24,7 @@ export function UserAuthFormSignIn({ className, ...props }: UserAuthFormProps) {
 
     try {
       await signIn(username, password)
-      router.push("/home")
+      router.push("/")
     } catch (error) {
       console.error("Error signing in:", error)
     } finally {
@@ -36,7 +36,7 @@ export function UserAuthFormSignIn({ className, ...props }: UserAuthFormProps) {
     setIsLoading(true)
     try {
       await signInDemo()
-      router.push("/home")
+      router.push("/")
     } catch (error) {
       console.error("Error signing up with Google:", error)
     } finally {

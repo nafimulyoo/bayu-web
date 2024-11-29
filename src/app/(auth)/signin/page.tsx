@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { UserAuthFormSignIn } from "@/app/(auth)/components/user-auth-form-signin";
 import Image from "next/image";
-
+import { AppFooter } from "@/components/app-footer";
 
 export default function SignInPage() {
   return (
@@ -27,6 +27,10 @@ export default function SignInPage() {
           <Image src="/signin.jpg" layout="fill" objectFit="cover"  alt="Sign in image" />
           <div className="absolute inset-0" />
         </div>
+      </div>
+      
+      <div className="absolute bottom-0 w-full">
+        <AppFooter />
       </div>
     </>
   );
