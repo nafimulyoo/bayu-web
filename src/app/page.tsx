@@ -152,8 +152,8 @@ useEffect(() => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
         <TabsList className="grid w-1/2 grid-cols-3 h-12 ">
-          <TabsTrigger className="h-9 text-md" value="control">Control & Data</TabsTrigger>
-          <TabsTrigger className="h-9 text-md" value="simulation">Simulation</TabsTrigger>
+          <TabsTrigger className="h-9 text-md" value="control">Live Mode</TabsTrigger>
+          <TabsTrigger className="h-9 text-md" value="simulation">Simulation Mode</TabsTrigger>
           <TabsTrigger className="h-9 text-md" value="module">Tutorial</TabsTrigger>
         </TabsList>
         </div>
