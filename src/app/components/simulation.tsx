@@ -16,7 +16,7 @@ const initialSystemData = [
   { time: '20:00', voltage: 12.2, current: 5.4, power: 65.88 },
 ]
 
-export default function Simulation({state, data}: any) {
+export default function Simulation({state}: any) {
   const [windSpeed, setWindSpeed] = useState(10)
   const [systemData, setSystemData] = useState(initialSystemData)
   const components = [

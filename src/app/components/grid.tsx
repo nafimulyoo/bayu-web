@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react";
-export default function Grid({state, data}: any) {
-    const { generator, mppt, battery, load_1, load_2, load_3 } = state;
-    const svgRef = useRef<HTMLDivElement>(null);
-
+export default function Grid({state}: any) {
+  const svgRef = useRef<HTMLDivElement>(null);
+  
+  const { generator, mppt, battery, load_1, load_2, load_3 } = state;
     useEffect(() => {
         const K1 = generator;
         const K2 = battery;
@@ -18,7 +18,7 @@ export default function Grid({state, data}: any) {
         if (element) {
           element.style.fill = value;
         }
-        console.log(element);
+
       }
   
       function setInvisible(selector: string, state: string) {

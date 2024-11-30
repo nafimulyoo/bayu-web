@@ -15,7 +15,7 @@ const batteryData = [
   { time: '20:00', voltage: 12.2 },
 ]
 
-export default function Dashboard({state, data}: any) {
+export default function Dashboard({state}: any) {
   // Placeholder data - in a real application, this would come from your backend
   const batteryPercentage = 75
   const batteryVoltage = 12.6

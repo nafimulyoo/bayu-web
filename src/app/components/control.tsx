@@ -1,24 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect, Children } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import Grid from "./grid"
 
-// Placeholder data for the chart
-const systemData = [
-  { time: '00:00', voltage: 12.1, current: 5.2, power: 62.92 },
-  { time: '04:00', voltage: 12.3, current: 5.5, power: 67.65 },
-  { time: '08:00', voltage: 12.6, current: 6.0, power: 75.60 },
-  { time: '12:00', voltage: 12.8, current: 6.2, power: 79.36 },
-  { time: '16:00', voltage: 12.5, current: 5.8, power: 72.50 },
-  { time: '20:00', voltage: 12.2, current: 5.4, power: 65.88 },
-]
-export default function Control({ state, setState }: any) {
-  const [dataType, setDataType] = useState("voltage");
+import Grid from "./grid"
+import { Slider } from "@/components/ui/slider"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+
+export default function Control({ children, state, setState }: any) {
+  const [ batteryPercentage, setBatteryPercentage ] = useState(75);
+  const [ batteryStatus, setBatteryStatus ] = useState("Charging");
+  const [ windSpeed, setWindSpeed ] = useState("15.2");
+  const { generator, mppt, battery, load_1, load_2, load_3, blower } = state;
+
+  useEffect(() => {
+      const K1 = generator;
+      const K2 = battery;
+      const K3 = load_2;
+      const K4 = load_3;
+      const K5 = load_1;
+
+    if (K1 && K2 && !(K3 || K4 || K5)) {
+      setBatteryStatus("Charging");
+    }
+    else if ((!K1 && K2) && (K3 || K4 || K5)) {
+      setBatteryStatus("Discharging");
+    }
+    else if ((K1 && K2) && (K3 || K4 || K5)) {
+      setBatteryStatus("Neutral");
+    }
+    else if ((K1 && !K2) && (K3 || K4 || K5)) {
+      setBatteryStatus("Direct Power");
+    }
+    else {
+      setBatteryStatus("Idle");
+    }
+
+    const calculatedWindSpeed = (blower * 0.1 + Math.random() * 0.5).toFixed(2);
+    setWindSpeed(calculatedWindSpeed);
+  }, [state])
+
   const components = [
     { key: "generator", label: "Generator" },
     { key: "mppt", label: "MPPT" },
@@ -28,6 +52,16 @@ export default function Control({ state, setState }: any) {
     { key: "load_3", label: "Load 3" },
   ];
 
+
+
+  
+  const handleBlowerSpeedChange = (newSpeed: number[]) => {
+    setState((prevState: any) => ({
+      ...prevState,
+      blower: newSpeed[0],
+    }));
+  };
+
   const toggleComponent = (key: string) => {
     setState((prevState: any) => ({
       ...prevState,
@@ -36,72 +70,117 @@ export default function Control({ state, setState }: any) {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Card>
+<div className="grid gap-4 md:grid-cols-6 h-screen mt-6">
+  {/* System Controls */}
+  <div className="md:col-span-1 ">
+  <Card className="h-[100px]">
+    <CardHeader>
+    <CardTitle className="flex justify-between">
+        Status
+        </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p className="font-bold text-2xl -mt-4 text-primary">
+        {batteryStatus}
+      </p>
+    </CardContent>
+  </Card>
+  <Card className=" h-[310px] mt-4">
+    <CardHeader>
+      <CardTitle>Grid Controls</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        {components.map(({ key, label }) => (
+          <div key={key} className="flex items-center justify-between">
+            <Label htmlFor={key}>{label}</Label>
+            <Switch
+              id={key}
+              checked={state[key]} // Bind switch checked state to the current state
+              onCheckedChange={() => toggleComponent(key)} // Update the state on toggle
+            />
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+  <Card className="h-[100px] mt-4">
+    <CardHeader>
+    <CardTitle className="flex justify-between">
+        <span>Blower Speed</span>
+        <span className="font-normal">{state.blower}%</span>
+        </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+      <Slider
+              id="blower-speed"
+              min={0}
+              max={100}
+              step={10}
+              value={[state.blower]} 
+              onValueChange={handleBlowerSpeedChange}
+            />
+      </div>
+    </CardContent>
+  </Card>
+  </div>
+
+
+  {/* Circuit Diagram */}
+  <Card className="md:col-span-3 h-[540px]">
+    <CardHeader>
+      <CardTitle>Grid Diagram</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center justify-center">
+        {Children.toArray(children)[0]}
+      </div>
+    </CardContent>
+  </Card>
+
+
+  {/* System Data */}
+  <div className="md:col-span-2">
+
+  <Card className="flex flex-row">
+  <div className="h-[100px] rounded-r-none flex-grow">
         <CardHeader>
-          <CardTitle>System Controls</CardTitle>
+          <CardTitle className="font-normal">Battery</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {components.map(({ key, label }) => (
-              <div key={key} className="flex items-center justify-between">
-                <Label htmlFor={key}>{label}</Label>
-                <Switch
-                  id={key}
-                  checked={state[key]} // Bind switch checked state to the current state
-                  onCheckedChange={() => toggleComponent(key)} // Update the state on toggle
-                />
-              </div>
-            ))}
-          </div>
+          <div className="text-xl font-bold -mt-4 text-primary">{batteryPercentage} %</div>
         </CardContent>
-      </Card>
-      <Card>
+      </div>
+      <div>
+
+      <Separator orientation="vertical" />
+      </div>
+  <div className="h-[100px] flex-grow">
         <CardHeader>
-          <CardTitle>Circuit Diagram</CardTitle>
+          <CardTitle className="font-normal rounded-none">Wind Speed</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="aspect-square flex items-center justify-center">
-            <Grid state={state} />
-          </div>
+          <div className="text-xl font-bold -mt-4 text-primary">{windSpeed} m/s</div>
         </CardContent>
-      </Card>
-      <Card className="md:col-span-2">
+      </div>
+      <div>
+
+      <Separator orientation="vertical" />
+      </div>
+  <div className="h-[100px] flex-grow">
         <CardHeader>
-          <CardTitle>System Data</CardTitle>
+          <CardTitle className="font-normal">Wind Power</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <Select onValueChange={setDataType} defaultValue={dataType}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select data type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="voltage">Voltage</SelectItem>
-                <SelectItem value="current">Current</SelectItem>
-                <SelectItem value="power">Power</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={systemData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey={dataType}
-                  stroke="#8884d8"
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <div className="text-xl font-bold -mt-4 text-primary">20.1 W</div>
         </CardContent>
+        </div>
       </Card>
-    </div>
+      
+      {Children.toArray(children)[1]}
+  </div>
+</div>
+
   );
 }
