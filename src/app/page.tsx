@@ -14,13 +14,54 @@ import { useEffect } from "react";
 import Grid from "./components/grid";
 import { rtdb } from "@/lib/firebase/firebase";
 import { ref, get, onValue, set, push } from "firebase/database";
-import DataControl from "./components/dataControl";
+
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("control")
   const [state, setState]: any = useState(null); // Initial state is null until fetched
   const stateRef = ref(rtdb, "realtime/state"); // Adjust the path as needed
+  const [ simulationState, setSimulationState ] = useState({
+    generator: false,
+    mppt: false,
+    battery: false,
+    load_1: false,
+    load_2: false,
+    load_3: false,
+    blower: 0,
+    time: 0,
+    simulationSpeed: 50,
+    turbineEfficiency: 50,
+    mpptMultiplier: 50,
+    loadResistance: [10, 15, 20]
+  });
 
+  
+  const [ simulationData, setSimulationData ] = useState({
+    battery: [
+      {
+        batteryPercentage: 50,
+        voltage:  10.5 + (50/100) * (12.7-10.5),
+        current: 0,
+        timestamp: 0,
+      }
+      ],
+    load: [
+      {
+        voltage: 0,
+        current: 0,
+        timestamp: 0
+      }
+    ],
+    mppt : [
+      {
+        voltage: 0,
+        current: 0,
+        timestamp: 0
+      }
+    ]
+  });
+
+  console.log("simulationState", simulationState)
 
   let debounceTimeout: any;
   const debounceUpdate = (updatedState: any, delay = 100) => {
@@ -101,37 +142,37 @@ const generateRandomData = () => {
   };
 };
 
-useEffect(() => {
-  const intervalId = setInterval(async () => {
-    const timestamp = new Date().getTime();
+// useEffect(() => {
+//   const intervalId = setInterval(async () => {
+//     const timestamp = new Date().getTime();
 
-    const batteryData = generateRandomData();
-    const loadData = generateRandomData();
+//     const batteryData = generateRandomData();
+//     const loadData = generateRandomData();
 
-    try {
-      // Write battery data
-      await push(ref(rtdb, `realtime/data/battery`), {
-        voltage: Math.round(batteryData.voltage * 100)/100,
-        current: Math.round(batteryData.current)/100,
-        timestamp,
-      });
+//     try {
+//       // Write battery data
+//       await push(ref(rtdb, `realtime/data/battery`), {
+//         voltage: Math.round(batteryData.voltage * 100)/100,
+//         current: Math.round(batteryData.current)/100,
+//         timestamp,
+//       });
 
-      // Write load data
-      await push(ref(rtdb, `realtime/data/load`), {
-        voltage: Math.round(batteryData.voltage * 100)/100,
-        current: Math.round(batteryData.current)/100,
-        timestamp,
-      });
+//       // Write load data
+//       await push(ref(rtdb, `realtime/data/load`), {
+//         voltage: Math.round(batteryData.voltage * 100)/100,
+//         current: Math.round(batteryData.current)/100,
+//         timestamp,
+//       });
 
-      console.log("Data written successfully at timestamp:", timestamp);
-    } catch (error) {
-      console.error("Error writing data to Firebase:", error);
-    }
-  }, 2500); // Set interval to 10 seconds
+//       console.log("Data written successfully at timestamp:", timestamp);
+//     } catch (error) {
+//       console.error("Error writing data to Firebase:", error);
+//     }
+//   }, 2500); // Set interval to 10 seconds
 
-  // Cleanup function to clear the interval when the component unmounts
-  return () => clearInterval(intervalId);
-}, []); // Empty dependency array ensures this runs only once
+//   // Cleanup function to clear the interval when the component unmounts
+//   return () => clearInterval(intervalId);
+// }, []); // Empty dependency array ensures this runs only once
 
 
   const router = useRouter();
@@ -152,7 +193,7 @@ useEffect(() => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
         <TabsList className="grid w-1/2 grid-cols-3 h-12 ">
-          <TabsTrigger className="h-9 text-md" value="control">Live Mode</TabsTrigger>
+          <TabsTrigger className="h-9 text-md" value="control">Control Mode</TabsTrigger>
           <TabsTrigger className="h-9 text-md" value="simulation">Simulation Mode</TabsTrigger>
           <TabsTrigger className="h-9 text-md" value="module">Tutorial</TabsTrigger>
         </TabsList>
@@ -160,14 +201,15 @@ useEffect(() => {
         <TabsContent value="control">
           <Control state={state} setState={setStateAndSync}>
               <Grid state={state} setState={setStateAndSync}/>
-              <DataControl/>
           </Control>
         </TabsContent>
         <TabsContent value="module">
           <Module/>
         </TabsContent>
         <TabsContent value="simulation">
-          <Simulation state={state}/>
+          <Simulation simulationState={simulationState} setSimulationState={setSimulationState} simulationData={simulationData} setSimulationData={setSimulationData}>
+            <Grid state={simulationState}/>
+          </Simulation>
         </TabsContent>
       </Tabs>
       <Button

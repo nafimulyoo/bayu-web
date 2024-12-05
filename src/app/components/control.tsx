@@ -9,7 +9,7 @@ import Grid from "./grid"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-
+import DataControl from "@/components/dataControl";
 export default function Control({ children, state, setState }: any) {
   const [ batteryPercentage, setBatteryPercentage ] = useState(75);
   const [ batteryStatus, setBatteryStatus ] = useState("Charging");
@@ -134,7 +134,7 @@ export default function Control({ children, state, setState }: any) {
     </CardHeader>
     <CardContent>
       <div className="flex items-center justify-center">
-        {Children.toArray(children)[0]}
+        {children}
       </div>
     </CardContent>
   </Card>
@@ -177,8 +177,7 @@ export default function Control({ children, state, setState }: any) {
         </CardContent>
         </div>
       </Card>
-      
-      {Children.toArray(children)[1]}
+      <DataControl/>
   </div>
 </div>
 
