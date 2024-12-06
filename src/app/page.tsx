@@ -135,46 +135,6 @@ const setStateAndSync = (updateFnOrState: any) => {
   }
 };
 
-const generateRandomData = () => {
-  return {
-    voltage: (Math.random() * 5 + 10),
-    current: (Math.random() * 2 + 1)
-  };
-};
-
-// useEffect(() => {
-//   const intervalId = setInterval(async () => {
-//     const timestamp = new Date().getTime();
-
-//     const batteryData = generateRandomData();
-//     const loadData = generateRandomData();
-
-//     try {
-//       // Write battery data
-//       await push(ref(rtdb, `realtime/data/battery`), {
-//         voltage: Math.round(batteryData.voltage * 100)/100,
-//         current: Math.round(batteryData.current)/100,
-//         timestamp,
-//       });
-
-//       // Write load data
-//       await push(ref(rtdb, `realtime/data/load`), {
-//         voltage: Math.round(batteryData.voltage * 100)/100,
-//         current: Math.round(batteryData.current)/100,
-//         timestamp,
-//       });
-
-//       console.log("Data written successfully at timestamp:", timestamp);
-//     } catch (error) {
-//       console.error("Error writing data to Firebase:", error);
-//     }
-//   }, 2500); // Set interval to 10 seconds
-
-//   // Cleanup function to clear the interval when the component unmounts
-//   return () => clearInterval(intervalId);
-// }, []); // Empty dependency array ensures this runs only once
-
-
   const router = useRouter();
   async function handleSignOut() {
     try {
