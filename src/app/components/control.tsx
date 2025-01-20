@@ -4,174 +4,17 @@ import { useState, useMemo, useEffect, Children } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { rtdb } from "@/lib/firebase/firebase";
-import { ref, get, onValue, query, orderByChild, startAt } from "firebase/database";
+
 import Grid from "./grid"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import DataControl from "@/components/dataControl";
 export default function Control({ children, state, setState }: any) {
-  const [ batteryPercentage, setBatteryPercentage ] = useState(50);
+  const [ batteryPercentage, setBatteryPercentage ] = useState(75);
   const [ batteryStatus, setBatteryStatus ] = useState("Charging");
-  const [ windSpeed, setWindSpeed ] = useState(0);
+  const [ windSpeed, setWindSpeed ] = useState("15.2");
   const { generator, mppt, battery, load_1, load_2, load_3, blower } = state;
-  interface BatteryData {
-    timestamp: string;
-    voltage: number;
-    current: number;
-    power: number;
-    batteryPercentage: number;
-  }
-
-  interface LoadData {
-    timestamp: string;
-    voltage: number;
-    current: number;
-    power: number;
-  }
-
-  const [batteryData, setBatteryData] = useState<BatteryData[]>([
-    {
-      timestamp: 0,
-      voltage: 0,
-      current: 0,
-      power: 0,
-      batteryPercentage: 0,
-    },
-  ]);
-  const [loadData, setLoadData] = useState<LoadData[]>([
-    {
-      timestamp: 0,
-      voltage: 0,
-      current: 0,
-      power: 0,
-    },
-  ]);
-
-  const batteryRef = ref(rtdb, "realtime/data/battery");
-  const loadRef = ref(rtdb, "realtime/data/load");
-  
-  const fetchData = async () => {
-    const currentTimestamp = Date.now();
-    const timeAgo = currentTimestamp -  60 * 60 * 1000; // 24 hours in milliseconds
-  
-    try {
-      // Query battery data based on the last 24 hours
-      const batteryQuery = query(batteryRef, orderByChild("timestamp"), startAt(timeAgo));
-      const batterySnapshot = await get(batteryQuery);
-      const batteryData: any = [];
-      if (batterySnapshot.exists()) {
-        batterySnapshot.forEach((childSnapshot) => {
-          const data = childSnapshot.val();
-          let newBatteryPercentage = ((data.voltage-9) / (10-9)) * 100
-          if (newBatteryPercentage > 100) {
-            newBatteryPercentage = 100;
-          }
-          if (newBatteryPercentage < 0) {
-            newBatteryPercentage = 0;
-          }
-          console.log(newBatteryPercentage)
-
-          batteryData.push({
-            timestamp: childSnapshot.key,
-            voltage: data.voltage,
-            current: data.current,
-            power: data.voltage * data.current,
-            batteryPercentage: newBatteryPercentage,
-          });
-        });
-      }
-  
-      // Query load data based on the last 24 hours
-      const loadQuery = query(loadRef, orderByChild("timestamp"), startAt(timeAgo));
-      const loadSnapshot = await get(loadQuery);
-      const loadData: any = [];
-      if (loadSnapshot.exists()) {
-        loadSnapshot.forEach((childSnapshot) => {
-          const data = childSnapshot.val();
-          loadData.push({
-            timestamp: data.timestamp,
-            voltage: data.voltage,
-            current: data.current,
-            power: data.voltage * data.current,
-          });
-        });
-      }
-  
-      setBatteryData(batteryData);
-      setLoadData(loadData);
-      setBatteryPercentage(batteryData[batteryData.length - 1].batteryPercentage);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-
-  // Handle battery status based on the battery percentage
-  
-
-  // Listen for real-time updates in Firebase
-  const listenForUpdates = () => {
-    onValue(batteryRef, (snapshot) => {
-      const currentTimestamp = Date.now();
-      const timeAgo = currentTimestamp - 60 * 60 * 1000; // 24 hours in milliseconds
-      const updatedBatteryData: any = [];
-
-  
-      snapshot.forEach((childSnapshot) => {
-        const data = childSnapshot.val();
-        
-        let newBatteryPercentage = ((data.voltage-9) / (10-9)) * 100
-        if (newBatteryPercentage > 100) {
-          newBatteryPercentage = 100;
-        }
-        if (newBatteryPercentage < 0) {
-          newBatteryPercentage = 0;
-        }
-        console.log(newBatteryPercentage)
-        const timestamp = data.timestamp;
-        if (timestamp >= timeAgo) {
-          updatedBatteryData.push({
-            timestamp: data.timestamp,
-            voltage: data.voltage,
-            current: data.current,
-            power: data.voltage * data.current,
-            batteryPercentage: newBatteryPercentage,
-          });
-        }
-      });
-      setBatteryData(updatedBatteryData);
-    });
-  
-    onValue(loadRef, (snapshot) => {
-      const currentTimestamp = Date.now();
-      const timeAgo = currentTimestamp -  60 * 60 * 1000; // 24 hours in milliseconds
-      const updatedLoadData: any = [];
-  
-      snapshot.forEach((childSnapshot) => {
-        const data = childSnapshot.val();
-        const timestamp = data.timestamp;
-        if (timestamp >= timeAgo) {
-          updatedLoadData.push({
-            timestamp: data.timestamp,
-            voltage: data.voltage,
-            current: data.current,
-            power: data.voltage * data.current,
-          });
-        }
-      });
-      setLoadData(updatedLoadData);
-    });
-  };
-  
-
-  // Update the system data based on data type and selected time window
-  useEffect(() => {
-    fetchData(); // Fetch data based on the selected time window
-    listenForUpdates(); // Start listening for updates
-  }, []); // Re-run whenever the dataTime changes
-
 
   useEffect(() => {
       const K1 = generator;
@@ -196,7 +39,7 @@ export default function Control({ children, state, setState }: any) {
       setBatteryStatus("Idle");
     }
 
-    const calculatedWindSpeed = Math.round((blower * 0.1 + Math.random() * 0.5 ) * 100)/100
+    const calculatedWindSpeed = (blower * 0.1 + Math.random() * 0.5).toFixed(2);
     setWindSpeed(calculatedWindSpeed);
   }, [state])
 
@@ -227,9 +70,6 @@ export default function Control({ children, state, setState }: any) {
   };
 
   return (
-    <div>
-
-
 <div className="grid gap-4 md:grid-cols-6 h-screen mt-6">
   {/* System Controls */}
   <div className="md:col-span-1 ">
@@ -267,7 +107,7 @@ export default function Control({ children, state, setState }: any) {
   <Card className="h-[100px] mt-4">
     <CardHeader>
     <CardTitle className="flex justify-between">
-        <span>Blower Speed**</span>
+        <span>Blower Speed</span>
         <span className="font-normal">{state.blower}%</span>
         </CardTitle>
     </CardHeader>
@@ -309,7 +149,7 @@ export default function Control({ children, state, setState }: any) {
           <CardTitle className="font-normal">Battery</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-xl font-bold -mt-4 text-primary">{batteryData[batteryData.length - 1].batteryPercentage.toFixed(2) ? batteryData[batteryData.length - 1].batteryPercentage.toFixed(2) : "50"} %</div>
+          <div className="text-xl font-bold -mt-4 text-primary">{batteryPercentage} %</div>
         </CardContent>
       </div>
       <div>
@@ -318,7 +158,7 @@ export default function Control({ children, state, setState }: any) {
       </div>
   <div className="h-[100px] flex-grow">
         <CardHeader>
-          <CardTitle className="font-normal rounded-none">Wind Speed*</CardTitle>
+          <CardTitle className="font-normal rounded-none">Wind Speed</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-xl font-bold -mt-4 text-primary">{windSpeed} m/s</div>
@@ -330,22 +170,16 @@ export default function Control({ children, state, setState }: any) {
       </div>
   <div className="h-[100px] flex-grow">
         <CardHeader>
-          <CardTitle className="font-normal">Wind Power*</CardTitle>
+          <CardTitle className="font-normal">Wind Power</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-xl font-bold -mt-4 text-primary">{(0.5 * 1.225 * 0.5 * Math.PI * Math.pow(0.5, 2) * Math.pow(windSpeed, 3)).toFixed(2)} W</div>
+          <div className="text-xl font-bold -mt-4 text-primary">20.1 W</div>
         </CardContent>
         </div>
       </Card>
-      <DataControl batteryData={batteryData} loadData={loadData}/>
+      <DataControl/>
   </div>
 </div>
-  <div>
-    *Wind Speed and Wind Power are simulated values and do not represent real-time data.
-  </div>
-  <div>
-    **Blower Speed control is a simulated value and does not represent real-time data.
-  </div>
-</div>
+
   );
 }

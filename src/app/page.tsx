@@ -78,6 +78,18 @@ export default function Home() {
         if (snapshot.exists()) {
           console.log("Initial state fetched:", snapshot.val());
           setState(snapshot.val()); 
+          setSimulationState(
+            {
+              ...simulationState,
+              generator: snapshot.val().generator,
+              mppt: snapshot.val().mppt,
+              battery: snapshot.val().battery,
+              load_1: snapshot.val().load_1,
+              load_2: snapshot.val().load_2,
+              load_3: snapshot.val().load_3,
+              blower: snapshot.val().blower,
+            }
+          );
         } else {
           console.log("No data available");
           // Set default state if no data exists in Firebase
@@ -90,6 +102,9 @@ export default function Home() {
             load_3: false,
             blower: 0,
           });
+
+
+            
         }
       } catch (error) {
         console.error("Error fetching initial state:", error);
@@ -107,6 +122,17 @@ export default function Home() {
       if (JSON.stringify(updatedState) !== JSON.stringify(state)) {
         console.log("Updating state from Firebase...");
         setState(updatedState);
+        setSimulationState(
+          {
+            ...simulationState,
+            generator: updatedState.generator,
+            mppt: updatedState.mppt,
+            battery: updatedState.battery,
+            load_1: updatedState.load_1,
+            load_2: updatedState.load_2,
+            load_3: updatedState.load_3,
+            blower: updatedState.blower,
+          });
       }
     });
   
@@ -129,8 +155,17 @@ const setStateAndSync = (updateFnOrState: any) => {
       debounceUpdate(newState); // Use debounce to prevent frequent updates
       return newState;
     });
+    setSimulationState((prevState: any) => {
+      const newState = updateFnOrState(prevState);
+      debounceUpdate(newState); // Use debounce to prevent frequent updates
+      return newState;
+    });
   } else {
     setState(updateFnOrState);
+    setSimulationState({
+      ...simulationState,
+      ...updateFnOrState,
+    });
     debounceUpdate(updateFnOrState); // Use debounce to prevent frequent updates
   }
 };
@@ -167,7 +202,7 @@ const setStateAndSync = (updateFnOrState: any) => {
           <Module/>
         </TabsContent>
         <TabsContent value="simulation">
-          <Simulation simulationState={simulationState} setSimulationState={setSimulationState} simulationData={simulationData} setSimulationData={setSimulationData}>
+          <Simulation simulationState={simulationState} setSimulationState={setStateAndSync} simulationData={simulationData} setSimulationData={setSimulationData}>
             <Grid state={simulationState}/>
           </Simulation>
         </TabsContent>
