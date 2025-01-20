@@ -151,6 +151,7 @@ const updateStateInDatabase = (updatedState: any) => {
 
 const setStateAndSync = (updateFnOrState: any) => {
   if (typeof updateFnOrState === "function") {
+    
     setState((prevState: any) => {
       const newState = updateFnOrState(prevState);
       debounceUpdate(newState); // Use debounce to prevent frequent updates
@@ -159,17 +160,11 @@ const setStateAndSync = (updateFnOrState: any) => {
     setSimulationState((prevState: any) => {
       const newState = updateFnOrState(prevState);
       debounceUpdate(newState); // Use debounce to prevent frequent updates
-      return {
-        ...prevState,
-        newState
-      }
+      return newState;
     });
   } else {
     setState(updateFnOrState);
-    setSimulationState({
-      ...simulationState,
-      ...updateFnOrState,
-    });
+    setSimulationState(updateFnOrState);
     debounceUpdate(updateFnOrState); // Use debounce to prevent frequent updates
   }
 };
