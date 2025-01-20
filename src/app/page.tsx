@@ -79,8 +79,8 @@ export default function Home() {
           console.log("Initial state fetched:", snapshot.val());
           setState(snapshot.val()); 
           setSimulationState(
-            {
-              ...simulationState,
+            (prevState: any) => ({
+              ...prevState,
               generator: snapshot.val().generator,
               mppt: snapshot.val().mppt,
               battery: snapshot.val().battery,
@@ -88,7 +88,7 @@ export default function Home() {
               load_2: snapshot.val().load_2,
               load_3: snapshot.val().load_3,
               blower: snapshot.val().blower,
-            }
+            })
           );
         } else {
           console.log("No data available");
@@ -123,8 +123,8 @@ export default function Home() {
         console.log("Updating state from Firebase...");
         setState(updatedState);
         setSimulationState(
-          {
-            ...simulationState,
+          (prevState: any) => ({
+            ...prevState,
             generator: updatedState.generator,
             mppt: updatedState.mppt,
             battery: updatedState.battery,
@@ -132,7 +132,8 @@ export default function Home() {
             load_2: updatedState.load_2,
             load_3: updatedState.load_3,
             blower: updatedState.blower,
-          });
+          })
+        );
       }
     });
   
@@ -158,7 +159,10 @@ const setStateAndSync = (updateFnOrState: any) => {
     setSimulationState((prevState: any) => {
       const newState = updateFnOrState(prevState);
       debounceUpdate(newState); // Use debounce to prevent frequent updates
-      return newState;
+      return {
+        ...prevState,
+        newState
+      }
     });
   } else {
     setState(updateFnOrState);
